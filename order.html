@@ -1,0 +1,858 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>봉사단 키오스크</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #fefefe;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      color: #333;
+    }
+
+    /* ✅ 여기에 payment-btn 스타일 추가! */
+   #payment-method-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  max-width: 400px;
+  margin: 20px auto;
+  text-align: center;
+}
+
+#payment-method-buttons p {
+  grid-column: span 2;
+}
+
+.payment-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  font-size: 1rem;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  background-color: #74b9ff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  overflow: hidden;
+}
+
+/* 기존 텍스트는 숨김 */
+.payment-btn span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.payment-btn:hover {
+  background-color: #0984e3;
+}
+
+/* 아이콘 스타일 */
+.payment-btn::before {
+  content: attr(data-icon);
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 8px;
+  color: white;
+}
+
+/* 라벨 + 구분선 스타일 */
+.payment-btn::after {
+  content: attr(data-label);
+  font-size: 0.9rem;
+  display: block;
+  margin-top: 4px;
+  border-top: 1px solid white;
+  padding-top: 4px;
+  color: white;
+}
+
+
+
+    h1 {
+      padding: 30px 20px;
+      margin: 0;
+      font-size: 2rem;
+      background: linear-gradient(to right, #74b9ff, #a29bfe);
+      color: white;
+    }
+    .menu-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 40px 20px;
+    }
+    .menu-button {
+      font-size: 0.8rem;
+      padding: 30px 20px;
+      background-color: #fff;
+      border: 2px solid #ccc;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+    .menu-button:hover { background-color: #f0f0f0; }
+    .menu-image {
+      width: 82%;
+      height: auto;
+      border-radius: 14px;
+      margin-bottom: 12px;
+    }
+    .soldout-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      color: white;
+      font-size: 1.2rem;
+      font-weight: bold;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border-radius: 20px;
+      pointer-events: none;
+    }
+    #admin-zone {
+      position: absolute;
+      top: 0; right: 0;
+      width: 100px;
+      height: 100px;
+      z-index: 1000;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      width: 320px;
+      max-height: 90%;
+      overflow-y: auto;
+      text-align: center;
+    }
+    .option-btn {
+      background-color: #f8f8f8;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 0.6rem;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    .option-btn:hover { background-color: #dfe6e9; }
+    .selected-option {
+      background-color: #81ecec !important;
+      color: #2d3436;
+      font-weight: bold;
+    }
+
+#cart {
+  margin: 30px auto;
+  width: 90%;
+  background: white;
+  padding: 30px;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: left;
+}
+#cart h2 { margin-top: 0; }
+#cart ul { list-style: none; padding: 0; }
+#cart li {
+  font-size: 1.2rem;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.item-name { flex: 1; }
+.quantity-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.qty-btn {
+  font-size: 1.2rem;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 8px;
+  background-color: #636e72;
+  color: white;
+  cursor: pointer;
+}
+.qty-btn:hover { background-color: #2d3436; }
+#order-btn {
+  width:95%;
+  margin-top: 20px;
+  padding: 18px 48px;
+  font-size: 1.4rem;
+  border: none;
+  border-radius: 14px;
+  background-color: #00b894;
+  color: white;
+  cursor: pointer;
+}
+
+
+@media print {
+  body, html {
+    width: 70mm;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white;
+  }
+  #receipt-page {
+    width: 65mm !important;
+    margin: 0 !important;
+    padding: 0 2mm !important;
+    font-size: 20px !important;
+    color: #222 !important;
+    text-align: center !important;
+    box-shadow: none !important;
+    background: white !important;
+  }
+  #receipt-content {
+    width: 88% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  img {
+    max-width: 45mm !important;
+    height: auto !important;
+    display: block;
+    margin: 0 0 5px 0;
+  }
+
+  h2 {
+    text-align: center !important;
+    font-size: 14px !important;
+    margin: 0 0 0px 0;
+    line-height: 1.2;
+  }
+
+
+
+  h3 {
+    text-align: center !important;
+    font-size: 15px !important;
+    margin: 0 0 0px 0;
+    line-height: 1.2;
+  }
+
+
+  p {
+    text-align: left !important;
+    font-size: 15px !important;
+    margin: 0 0 0px 0;
+    line-height: 1.2;
+  }
+
+
+  li {
+    text-align: left !important;
+    font-size: 15px !important;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+  }
+
+
+
+
+
+
+
+
+
+
+
+  ul, ol {
+    padding-left: 1px;
+  }
+  /* 필요없는 화면 요소는 숨김 */
+  h1, .menu-container, #cart, .modal, #admin-zone {
+    display: none !important;
+  }
+}
+</style>
+
+
+
+
+
+</head>
+<body>
+<div id="admin-zone"></div>
+<h1>오늘, 기분 좋은 하루를 구매해보세요!</h1>
+
+<!-- 관리자 모달 -->
+<div id="admin-modal" class="modal">
+  <div class="modal-content">
+    <h3>🛠 관리자 설정</h3>
+    <label><input type="checkbox" onchange="toggleSoldOut('❤️ 사랑 넘치는 하루')" id="check-❤️ 사랑 넘치는 하루" /> ❤️ 사랑 넘치는 하루</label><br/><br/>
+    <label><input type="checkbox" onchange="toggleSoldOut('🌟 특별한 하루')" id="check-🌟 특별한 하루" /> 🌟 특별한 하루</label><br/><br/>
+    <label><input type="checkbox" onchange="toggleSoldOut('☕ 여유로운 하루')" id="check-☕ 여유로운 하루" /> ☕ 여유로운 하루</label><br/><br/>
+    <label><input type="checkbox" onchange="toggleSoldOut('🎯 무조건 성공하는 하루')" id="check-🎯 무조건 성공하는 하루" /> 🎯 무조건 성공하는 하루</label><br/><br/>
+    <button class="option-btn" onclick="closeAdminModal()">닫기</button>
+  </div>
+</div>
+
+<!-- Sold Out 모달 -->
+<div id="soldout-modal" class="modal">
+  <div class="modal-content">
+    <h3>😢 품절되었습니다</h3>
+    <p>이 메뉴는 더 이상 구매하실 수 없습니다.</p>
+    <button class="option-btn" onclick="closeSoldOut()">확인</button>
+  </div>
+</div>
+
+<!-- 메뉴 버튼 -->
+<div class="menu-container">
+  <button class="menu-button" onmousedown="startPress(event, '❤️ 사랑 넘치는 하루')" onmouseup="endPress()" ontouchstart="startPress(event, '❤️ 사랑 넘치는 하루')" ontouchend="endPress()">
+    <img src="img/love-day.jpg" class="menu-image">
+    ❤️ 사랑 넘치는 하루
+    <div class="soldout-overlay" id="soldout-❤️ 사랑 넘치는 하루">품절</div>
+  </button>
+  <button class="menu-button" onmousedown="startPress(event, '🌟 특별한 하루')" onmouseup="endPress()" ontouchstart="startPress(event, '🌟 특별한 하루')" ontouchend="endPress()">
+    <img src="img/special-day.jpg" class="menu-image">
+    🌟 특별한 하루
+    <div class="soldout-overlay" id="soldout-🌟 특별한 하루">품절</div>
+  </button>
+  <button class="menu-button" onmousedown="startPress(event, '☕ 여유로운 하루')" onmouseup="endPress()" ontouchstart="startPress(event, '☕ 여유로운 하루')" ontouchend="endPress()">
+    <img src="img/relax-day.jpg" class="menu-image">
+    ☕ 여유로운 하루
+    <div class="soldout-overlay" id="soldout-☕ 여유로운 하루">품절</div>
+  </button>
+  <button class="menu-button" onmousedown="startPress(event, '🎯 무조건 성공하는 하루')" onmouseup="endPress()" ontouchstart="startPress(event, '🎯 무조건 성공하는 하루')" ontouchend="endPress()">
+    <img src="img/success-day.jpg" class="menu-image">
+    🎯 무조건 성공하는 하루
+    <div class="soldout-overlay" id="soldout-🎯 무조건 성공하는 하루">품절</div>
+  </button>
+</div>
+<!-- 통합 코드 Part 2/3: 옵션 모달, 장바구니, 오디오, 타이머 등 -->
+<!-- 옵션 선택 모달 -->
+<div id="option-modal" class="modal">
+  <div class="modal-content">
+    <h3 id="modal-title">옵션 선택</h3>
+    <div id="option-buttons"></div>
+    <button class="option-btn" onclick="closeModal()">취소</button>
+  </div>
+</div>
+
+<!-- 장바구니 -->
+<div id="cart">
+  <h2>🛒 장바구니</h2>
+  <ul id="cart-list"></ul>
+  <div id="total-count" style="font-size: 1.1rem; text-align: right;">총 수량: 0개</div>
+  <button id="order-btn" onclick="handleOrderButton()" disabled>주문하기</button>
+</div>
+
+<!-- 결제 단계: 바코드 입력, 영수증 -->
+<div id="coupon-modal" class="modal">
+  <div class="modal-content">
+    <h3>쿠폰을 이용하여 결제하세요</h3>
+    <p>결제 방식을 먼저 선택한 후,<br>확인버튼을 누른 뒤,<br>바코드를 스캔해 주세요.</p>
+
+    <!-- ✅ 결제 방식 선택 버튼 -->
+    <div id="payment-method-buttons" style="text-align: center; margin: 20px 0;">
+      <p><strong>결제 방식을 선택해주세요:</strong></p>
+      <button class="payment-btn" onclick="selectPaymentMethod('💸 현금')" data-icon="💸" data-label="현금">
+  <span>💸 현금</span>
+</button>
+<button class="payment-btn" onclick="selectPaymentMethod('💳 카드')" data-icon="💳" data-label="카드">
+  <span>💳 카드</span>
+</button>
+<button class="payment-btn" onclick="selectPaymentMethod('🎁 모바일 쿠폰')" data-icon="🎁" data-label="모바일 쿠폰">
+  <span>🎁 모바일 쿠폰</span>
+</button>
+<button class="payment-btn" onclick="selectPaymentMethod('🅿️ 간편결제')" data-icon="🅿️" data-label="간편결제">
+  <span>🅿️ 간편결제</span>
+</button>
+
+    </div>
+
+    <button class="option-btn" onclick="closeCouponModal()">확인</button>
+  </div>
+</div>
+
+
+<div id="receipt-page" style="display: none; padding: 40px;">
+  <h2>✅ 결제 완료. 감사합니다.</h2>
+  <div id="receipt-content" style="margin-top: 20px; text-align: center;"></div>
+  <p style="margin-top: 40px; font-size: 1rem;">잠시 후 처음 화면으로 돌아갑니다...</p>
+</div>
+
+<!-- 타이머 팝업 -->
+<div id="timeout-modal" class="modal">
+  <div class="modal-content">
+    <h3>⏳ 잠시 후 첫 페이지로 돌아갑니다...</h3>
+    <p id="countdown-text">6</p>
+    <button class="option-btn" onclick="extendTimeout()">⏱ 연장하기</button>
+  </div>
+</div>
+
+<!-- 숨겨진 바코드 입력 -->
+<input type="text" id="barcode-input" style="position:absolute; left:-9999px;" />
+
+<!-- 오디오 -->
+<audio id="audio-menu" src="audio/menu2.mp3" preload="auto"></audio>
+<audio id="audio-option" src="audio/option.mp3" preload="auto"></audio>
+<audio id="audio-barcode" src="audio/barcode.mp3" preload="auto"></audio>
+<audio id="audio-receipt" src="audio/receipt.mp3" preload="auto"></audio>
+
+<script>
+  const audioMenu = document.getElementById('audio-menu');
+  const audioOption = document.getElementById('audio-option');
+  const audioBarcode = document.getElementById('audio-barcode');
+  const audioReceipt = document.getElementById('audio-receipt');
+
+  const cart = {};
+  const selectedCommonOptions = {};
+  let pressTimer = null;
+  let orderClickCount = 0;
+  let barcodeScanCount = 0;
+
+  let selectedPaymentMethod = null;
+
+  function selectPaymentMethod(method) {
+    selectedPaymentMethod = method;
+    alert(`${method} 결제 방식을 선택하셨습니다.\n확인 버튼을 누르고 바코드를 스캔해 주세요.`);
+    document.getElementById('barcode-input').focus();
+  }
+
+
+
+  const menuOptions = {
+    "❤️ 사랑 넘치는 하루": ["맛있는 음식을 나누는 하루", "부모님과 대화를 나누는 하루", "친구와 사진을 함께 찍은 하루", "연인과 함께하는 하루"],
+    "🌟 특별한 하루": ["교수님께 칭찬을 들은 하루", "즐거운 공연을 보는 하루", "나에게 “사랑해”라고 말한 하루", "누군가의 고민을 진심으로 들어주는 하루"],
+    "☕ 여유로운 하루": ["좋아하는 책과 함께하는 하루", "잔잔한 음악을 듣는 하루", "산책의 여유를 즐기는 하루", "향이 좋은 커피를 마시는 하루"],
+    "🎯 무조건 성공하는 하루": ["복권에 당첨되는 하루", "원하는 직장에 취업하는 하루", "좋은 아이디어가 떠오르는 하루", "하루 목표를 작게라도 실천하는 하루"]
+  };
+
+  const commonOptions = [
+    { group: "하루 시간 설정", options: ["12시간제", "24시간제"] },
+    { group: "행운 정도 선택", options: ["운이 아주 좋은 하루", "보통인 하루", "조금 덜 운이 따르는 하루"] },
+    { group: "날씨 선택", options: ["맑음", "흐림", "비 오는 날"] },
+    { group: "하루 분위기 선택", options: ["활기차고 에너지 넘치는 하루", "조용하고 잔잔한 하루"] }
+  ];
+
+  let soldOutStatus = {
+    "❤️ 사랑 넘치는 하루": false,
+    "🌟 특별한 하루": false,
+    "☕ 여유로운 하루": false,
+    "🎯 무조건 성공하는 하루": false
+  };
+
+  function saveSoldOutStatus() {
+    localStorage.setItem('soldOutStatus', JSON.stringify(soldOutStatus));
+  }
+
+  function loadSoldOutStatus() {
+    const saved = localStorage.getItem('soldOutStatus');
+    if (saved) soldOutStatus = JSON.parse(saved);
+    for (let key in soldOutStatus) {
+      const overlay = document.getElementById(`soldout-${key}`);
+      if (overlay) overlay.style.display = soldOutStatus[key] ? 'flex' : 'none';
+      const checkbox = document.getElementById(`check-${key}`);
+      if (checkbox) checkbox.checked = soldOutStatus[key];
+    }
+  }
+
+  function toggleSoldOut(menuName) {
+    soldOutStatus[menuName] = !soldOutStatus[menuName];
+    const overlay = document.getElementById(`soldout-${menuName}`);
+    if (overlay) overlay.style.display = soldOutStatus[menuName] ? 'flex' : 'none';
+    const checkbox = document.getElementById(`check-${menuName}`);
+    if (checkbox) checkbox.checked = soldOutStatus[menuName];
+    saveSoldOutStatus();
+  }
+
+  function showSoldOut() {
+    document.getElementById('soldout-modal').style.display = 'flex';
+  }
+  function closeSoldOut() {
+    document.getElementById('soldout-modal').style.display = 'none';
+  }
+  function openAdminModal() {
+    document.getElementById('admin-modal').style.display = 'flex';
+  }
+  function closeAdminModal() {
+    document.getElementById('admin-modal').style.display = 'none';
+  }
+
+  let adminTapCount = 0;
+  let adminTapTimer = null;
+  document.getElementById('admin-zone').addEventListener('click', () => {
+    adminTapCount++;
+    clearTimeout(adminTapTimer);
+    adminTapTimer = setTimeout(() => adminTapCount = 0, 3000);
+    if (adminTapCount >= 6) {
+      adminTapCount = 0;
+      openAdminModal();
+    }
+  });
+
+  function startPress(event, menuName) {
+    event.preventDefault();
+    pressTimer = setTimeout(() => {
+      if (soldOutStatus[menuName]) {
+        showSoldOut();
+      } else {
+        openOptionModal(menuName);
+      }
+    }, 1000);
+  }
+
+  function endPress() {
+    clearTimeout(pressTimer);
+  }
+
+  function openOptionModal(menuName) {
+    audioOption.play();
+    document.getElementById('modal-title').textContent = `${menuName} 옵션 선택`;
+    const optionButtons = document.getElementById('option-buttons');
+    optionButtons.innerHTML = '';
+
+    menuOptions[menuName].forEach(opt => {
+      const btn = document.createElement('button');
+      btn.textContent = opt;
+      btn.className = 'option-btn';
+      btn.setAttribute('data-group', menuName);
+      btn.onclick = () => {
+        selectCommonOption(menuName, opt, btn);
+      };
+      optionButtons.appendChild(btn);
+    });
+
+    commonOptions.forEach(group => {
+  // 구분선
+  const hr = document.createElement('hr');
+  hr.style.border = 'none';
+  hr.style.borderTop = '1px dashed #ccc';
+  hr.style.margin = '20px 0';
+  optionButtons.appendChild(hr);
+
+  // 그룹 제목
+  const label = document.createElement('p');
+  label.innerHTML = `<strong>${group.group}</strong>`;
+  optionButtons.appendChild(label);
+
+  // 옵션 버튼들
+  group.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    btn.className = 'option-btn';
+    btn.setAttribute('data-group', group.group);
+    btn.onclick = () => {
+      selectCommonOption(group.group, opt, btn);
+    };
+    optionButtons.appendChild(btn);
+  });
+});
+
+
+
+    document.getElementById('option-modal').style.display = 'flex';
+  }
+
+  function selectCommonOption(groupName, optionValue, buttonElement) {
+    selectedCommonOptions[groupName] = optionValue;
+    const groupButtons = document.querySelectorAll(`[data-group="${groupName}"]`);
+    groupButtons.forEach(btn => btn.classList.remove('selected-option'));
+    buttonElement.classList.add('selected-option');
+    checkIfAllGroupsSelected();
+  }
+
+  function checkIfAllGroupsSelected() {
+    const selectedMenuGroup = Object.keys(menuOptions).find(menu => selectedCommonOptions[menu]);
+    const menuItemSelected = selectedMenuGroup && selectedCommonOptions[selectedMenuGroup];
+    const commonSelected = commonOptions.every(group => selectedCommonOptions[group.group]);
+    const allSelected = menuItemSelected && commonSelected;
+
+    document.getElementById('order-btn').disabled = !allSelected;
+
+    if (allSelected) {
+      const selectedItem = selectedCommonOptions[selectedMenuGroup];
+      addToCart(selectedItem);
+      for (let key in selectedCommonOptions) delete selectedCommonOptions[key];
+      document.querySelectorAll('.selected-option').forEach(btn => btn.classList.remove('selected-option'));
+      closeModal();
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('option-modal').style.display = 'none';
+  }
+
+  function closeCouponModal() {
+    document.getElementById('coupon-modal').style.display = 'none';
+  }
+
+  function addToCart(item) {
+    if (cart[item]) cart[item].qty++;
+    else cart[item] = { qty: 1 };
+    updateCart();
+  }
+
+  function changeQuantity(item, amount) {
+    if (cart[item]) {
+      cart[item].qty += amount;
+      if (cart[item].qty <= 0) delete cart[item];
+      updateCart();
+    }
+  }
+
+  function updateCart() {
+    const cartList = document.getElementById('cart-list');
+    const totalCountDisplay = document.getElementById('total-count');
+    cartList.innerHTML = '';
+    let totalCount = 0;
+    Object.keys(cart).forEach(item => {
+      const li = document.createElement('li');
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'item-name';
+      nameSpan.textContent = item;
+      const controls = document.createElement('div');
+      controls.className = 'quantity-controls';
+      const minusBtn = document.createElement('button');
+      minusBtn.className = 'qty-btn';
+      minusBtn.textContent = '-';
+      minusBtn.onclick = () => changeQuantity(item, -1);
+      const qty = document.createElement('span');
+      qty.textContent = `${cart[item].qty}개`;
+      const plusBtn = document.createElement('button');
+      plusBtn.className = 'qty-btn';
+      plusBtn.textContent = '+';
+      plusBtn.onclick = () => changeQuantity(item, 1);
+      controls.appendChild(minusBtn);
+      controls.appendChild(qty);
+      controls.appendChild(plusBtn);
+      li.appendChild(nameSpan);
+      li.appendChild(controls);
+      cartList.appendChild(li);
+      totalCount += cart[item].qty;
+    });
+    totalCountDisplay.textContent = `총 수량: ${totalCount}개`;
+  }
+
+  function handleOrderButton() {
+    orderClickCount++;
+    if (orderClickCount >= 3) {
+      placeOrder();
+      orderClickCount = 0;
+    }
+  }
+
+  function placeOrder() {
+    if (Object.keys(cart).length === 0) {
+      alert("장바구니가 비어 있습니다.");
+      return;
+    }
+    audioBarcode.play();
+    document.getElementById('coupon-modal').style.display = 'flex';
+  }
+
+  function showReceipt() {
+  document.querySelector('h1').style.display = 'none';
+  document.querySelector('.menu-container').style.display = 'none';
+  document.getElementById('cart').style.display = 'none';
+  const receiptDiv = document.getElementById('receipt-page');
+  const content = document.getElementById('receipt-content');
+  receiptDiv.style.display = 'block';
+
+  let totalCount = 0;
+  const categoryCounts = {};
+
+let html = `
+  <div style="text-align: left; padding-top: 10px;">
+    <img src="로고.png" alt="단체 로고" style="width: 60px; height: auto; display: block; margin-bottom: 1px;">
+    <h3 style="font-size:1.2rem;">주문 영수증</h3>
+  </div>
+  <ul style="list-style-type: none; padding: 0;">
+`;
+// 이하 생략
+
+
+  let chosenCategory = '';
+
+  Object.keys(cart).forEach(item => {
+    let groupName = '';
+    for (const [menu, items] of Object.entries(menuOptions)) {
+      if (items.includes(item)) {
+        groupName = menu;
+        break;
+      }
+    }
+    const icon = groupName?.slice(0, 2);
+    if (icon) {
+      if (!categoryCounts[icon]) categoryCounts[icon] = 0;
+      categoryCounts[icon] += cart[item].qty;
+      if (!chosenCategory) chosenCategory = groupName;
+    }
+    html += `<li>${groupName} - ${item} (${cart[item].qty}개)</li>`;
+    totalCount += cart[item].qty;
+  });
+
+  html += '</ul>';
+
+  if (chosenCategory) {
+    html += `
+      <hr style="border: none; border-top: 2px dashed #ccc; margin: 20px 0;">
+      <p><strong>\ 오늘, ${chosenCategory}<br>사세요!</strong></p>
+      <hr style="border: none; border-top: 2px dashed #ccc; margin: 20px 0;">
+    `;
+  }
+
+  html += `<p><strong>하루 종류별 개수:</strong></p><p>`;
+  Object.entries(categoryCounts).forEach(([icon, count]) => {
+    html += `${icon}: ${count}개 / `;
+  });
+  html = html.replace(/\s\/\s$/, ''); // 맨 끝 슬래시 제거
+  html += `</p>`;
+
+  html += `
+    <p><strong>총 수량: ${totalCount}개</strong></p>
+    <hr style="border: none; border-top: 2px solid #aaa; margin: 20px 0;">
+    <p style="margin-top: 0;">저희 서비스를 이용해주셔서<br>진심으로 감사합니다. 😊</p>
+    <hr style="border: none; border-top: 2px solid #aaa; margin: 20px 0;">
+    <div style="margin-top: 20px; text-align: center;">
+      <p>부스에 대한 의견을 들려주세요!</p>
+      <br>
+      <img src="img/qr.jpg" alt="설문 QR 코드" style="width: 150px; height: 150px;">
+
+    </div>
+  `;
+
+  content.innerHTML = html;
+  audioReceipt.play();
+  window.electronAPI.printReceipt();
+
+  setTimeout(() => {
+    window.location.href = 'start_2.0.html';
+  }, 10000);
+}
+
+  const barcodeInput = document.getElementById('barcode-input');
+  barcodeInput.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') {
+    if (!selectedPaymentMethod) {
+      alert("먼저 결제 방식을 선택해 주세요.");
+      this.value = "";
+      return;
+    }
+
+    if (Object.keys(cart).length === 0) {
+      alert("장바구니가 비어 있어 결제할 수 없습니다.");
+      this.value = "";
+      return;
+    }
+
+    let totalQty = Object.values(cart).reduce((acc, item) => acc + item.qty, 0);
+    barcodeScanCount++;
+    const remaining = totalQty - barcodeScanCount;
+    alert(`바코드 인식됨 (${barcodeScanCount}/${totalQty})\n남은 수량: ${remaining}`);
+
+    if (barcodeScanCount < totalQty) {
+      this.value = "";
+    } else if (barcodeScanCount === totalQty) {
+      closeCouponModal();
+      showReceipt();
+      this.value = "";
+      barcodeScanCount = 0;
+      selectedPaymentMethod = null; // 초기화
+    } else {
+      alert("이미 모든 항목이 스캔되었습니다.");
+      this.value = "";
+    }
+  }
+});
+
+
+  let idleTimer = null;
+  let countdownTimer = null;
+  let remainingSeconds = 6;
+
+  function startIdleTimer(duration = 5000) {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      showTimeoutModal();
+    }, duration);
+  }
+
+  function showTimeoutModal() {
+    document.getElementById('timeout-modal').style.display = 'flex';
+    remainingSeconds = 6;
+    document.getElementById('countdown-text').textContent = remainingSeconds;
+    countdownTimer = setInterval(() => {
+      remainingSeconds--;
+      document.getElementById('countdown-text').textContent = remainingSeconds;
+      if (remainingSeconds <= 0) {
+        clearInterval(countdownTimer);
+        window.location.href = 'start_2.0.html';
+      }
+    }, 1000);
+  }
+
+  function extendTimeout() {
+  clearInterval(countdownTimer);
+  document.getElementById('timeout-modal').style.display = 'none';
+  startIdleTimer(10000);
+}
+
+// ✅ 사용자 활동 시 idleTimer 리셋
+['mousemove', 'mousedown', 'touchstart', 'scroll', 'keydown'].forEach(event => {
+  window.addEventListener(event, () => startIdleTimer(10000));
+});
+
+  window.addEventListener('load', () => {
+    loadSoldOutStatus();
+    barcodeInput.focus();
+    audioMenu.play();
+    startIdleTimer();
+  });
+
+  window.addEventListener('keydown', () => barcodeInput.focus());
+
+
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+

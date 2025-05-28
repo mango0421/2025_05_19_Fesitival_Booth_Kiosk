@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>봉사단 키오스크 - 시작</title>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 80px;
+      padding: 0 40px;
+      color: #333;
+    }
+
+    .slider-container {
+      position: relative;
+      width: 500px;
+      height: 100px;
+      background: #e0e0e0;
+      border-radius: 50px;
+      overflow: hidden;
+      user-select: none;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      touch-action: none;
+    }
+
+    .slider-text {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      line-height: 100px;
+      color: #555;
+      font-size: 24px;
+      font-weight: bold;
+      pointer-events: none;
+    }
+
+    .slider-button {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: #4CAF50;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 30px;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .logo-image {
+      width: 200px;
+      height: auto;
+      margin-bottom: 40px;
+    }
+
+    /* ENG 버튼 스타일 */
+    .lang-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: #ddd;
+      color: #333;
+      padding: 22px 24px;
+      border-radius: 10px;
+      font-size: 25px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: background-color 0.2s;
+    }
+
+    .lang-btn:hover {
+      background-color: #ccc;
+    }
+
+  </style>
+</head>
+<body>
+  <audio id="menuAudio" src="audio2/menu_eng.mp3"></audio>
+
+  <!-- ENG 버튼 -->
+  <div class="lang-btn" onclick="location.href='start_2.0.html'">KOR</div>
+
+  <img src="로고.png" alt="로고" class="logo-image">
+
+  <h1>Experience a Wonderful Day Today!</h1>
+
+  <div class="slider-container" id="slider">
+    <div class="slider-text">▶ Slide to Order</div>
+    <div class="slider-button" id="sliderBtn">→</div>
+  </div>
+
+  <script>
+    let isDragging = false;
+    let startX;
+    let currentX = 0;
+    let touchCount = 0;
+    let audioPlayed = false;
+
+    const slider = document.getElementById('slider');
+    const sliderBtn = document.getElementById('sliderBtn');
+    const maxSlide = slider.offsetWidth - sliderBtn.offsetWidth;
+
+    function getX(e) {
+      return e.touches ? e.touches[0].clientX : e.clientX;
+    }
+
+    sliderBtn.addEventListener('mousedown', startDrag);
+    sliderBtn.addEventListener('touchstart', startDrag);
+
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('touchmove', onDrag, { passive: false });
+
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('touchend', endDrag);
+
+    function startDrag(e) {
+      isDragging = true;
+      startX = getX(e);
+
+      if (!audioPlayed) {
+        const audio = document.getElementById('menuAudio');
+        audio.currentTime = 0;
+        audio.play().catch(err => {
+          console.log('자동 재생 실패:', err);
+        });
+        audioPlayed = true;
+      }
+    }
+
+    function onDrag(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      currentX = getX(e) - startX;
+      if (currentX < 0) currentX = 0;
+      if (currentX > maxSlide) currentX = maxSlide;
+      sliderBtn.style.left = currentX + 'px';
+    }
+
+    function endDrag() {
+      if (!isDragging) return;
+      isDragging = false;
+
+      if (currentX >= maxSlide - 10) {
+        touchCount++;
+        if (touchCount >= 3) {
+          location.href = "order_eng.html";
+        }
+      }
+
+      sliderBtn.style.left = '0px';
+    }
+  </script>
+</body>
+</html>

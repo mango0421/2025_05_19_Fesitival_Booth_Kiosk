@@ -1,0 +1,15 @@
+{
+  "name": "봉사단키오스크",
+  "version": "1.0.0",
+  "description": "봉사단 키오스크 앱",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "지민근, 이해준",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.2.1",
+    "electron-packager": "^17.1.2"
+  }
+}
